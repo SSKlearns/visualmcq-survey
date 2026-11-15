@@ -5,3 +5,5 @@ __pycache__/
 run.sh
 prepare_data.py
 README.md
+data_zip/
+data.zip
