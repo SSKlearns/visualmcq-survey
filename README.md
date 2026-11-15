@@ -10,16 +10,19 @@ The admin page shows progress and downloads every response as CSV.
 ./run.sh
 ```
 
-This (1) copies the hard-bank questions and the images they use from `../cvpr-27` into `data/` (first run only,
-~220 MB), (2) builds the Docker image `vmcq-human-eval`, (3) (re)starts the container on **port 8015**.
+This (1) unpacks the questions and images from `data_zip/` into `data/` (first run only, ~220 MB), (2) builds
+the Docker image `vmcq-human-eval`, (3) (re)starts the container on **port 8015**. A clone of this repo is all a
+server needs: Docker, bash and `unzip` (or python3).
 Open `http://<server>:8015/visualmcq-survey/`.
 
-- Other repo location: `VMCQ_SRC=/path/to/cvpr-27 ./run.sh`
+- Rebuild `data/` from the cvpr-27 banks instead of the zip: `VMCQ_SRC=/path/to/cvpr-27 REPREPARE=1 ./run.sh`
 - Other URL path: `VMCQ_PREFIX=/other-path ./run.sh`; `VMCQ_PREFIX= ./run.sh` serves it at `/`
 - Other port: `PORT=9000 ./run.sh` (the container always listens on 8015 inside)
 - If `docker` needs root on the machine, the script falls back to `sudo docker`.
 - Proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, ...) are passed to the build when set.
-- To deploy on another machine without the cvpr-27 repo, copy this folder **including `data/`** and run `./run.sh`.
+- `data_zip/` is `data/` zipped and split into 45 MB parts (GitHub refuses files over 100 MB), with a sha256
+  that `run.sh` checks after joining them. To regenerate it after changing `data/`:
+  `zip -q -r -X data.zip data && split -b 45m -d -a 2 data.zip data_zip/data.zip.part- && sha256sum data.zip | sed 's/ .*/  data.zip/' > data_zip/data.zip.sha256 && rm data.zip`
 
 ## Behind a reverse proxy (e.g. `aih.cse.iitd.ac.in/visualmcq-survey`)
 
@@ -55,8 +58,9 @@ container never deletes them. Back up that file, or download the CSV from the ad
 
 - **Banks.** By default `implant_hard` and `reid_hard_cross`, asked as in the main results table: no "None of the
   above" option, and the questions whose answer is NOTA (62 implant, 11 people) are left out. For the NOTA table
-  use `NOTA=1 REPREPARE=1 ./run.sh` (banks `implant_hard_nota`, `reid_hard_cross_nota`, NOTA option shown). Do
-  not switch once annotation has started.
+  use `VMCQ_SRC=/path/to/cvpr-27 NOTA=1 ./run.sh` (banks `implant_hard_nota`, `reid_hard_cross_nota`, NOTA
+  option shown; needs the cvpr-27 repo, the zip holds the default banks only). Do not switch once annotation has
+  started.
 - **No overlap.** A question is handed to one annotator only (the question id is the primary key of the
   assignment table). An unanswered question stays with that annotator and is shown again when they return to
   the dataset.
@@ -80,5 +84,6 @@ display order; with NOTA shown, NOTA is option k+1.
 | `app.py` | Flask app: login, dataset choice, assignment, answers, admin, CSV |
 | `templates/` | the five pages |
 | `prepare_data.py` | builds `data/` from the cvpr-27 banks |
+| `data_zip/` | `data/` as a split zip, unpacked by `run.sh` |
 | `Dockerfile`, `run.sh` | image and one-command build + run |
 | `config/users.json` | accounts |
