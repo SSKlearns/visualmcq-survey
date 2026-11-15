@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% macro pct(x) %}{{ '%.1f'|format(x) if x is not none else '–' }}{% endmacro %}
+{% macro cell(c) %}{% if c[0] %}{{ c[0] }} <span class="muted">({{ '%.0f'|format(100 * c[1] / c[0]) }}%)</span>{% else %}<span class="muted">0</span>{% endif %}{% endmacro %}
+{% block body %}
+<div class="card">
+  <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+    <h1 style="margin:0">Responses</h1>
+    <span class="muted">{{ n_resp }} answered &middot; banks: {{ (meta.banks or [])|join(', ') }} &middot; NOTA option {{ 'shown' if meta.nota else 'not shown' }}</span>
+    <span style="flex:1"></span>
+    <a class="btn" href="{{ url_for('export_csv') }}">Download all responses (CSV)</a>
+  </div>
+
+  <h2>By annotator</h2>
+  <p class="muted" style="margin-top:0">Answered questions per dataset, with accuracy in brackets. Mean: unweighted mean of the
+     implant datasets the annotator answered; Pooled: over all their implant questions. Open: questions handed out but not yet answered.</p>
+  <div style="overflow-x:auto">
+  <table>
+    <tr><th>Annotator</th>{% for d in datasets %}<th class="num">{{ d[1] }}</th>{% endfor %}
+        <th class="num">Total</th><th class="num">Implants mean</th><th class="num">Implants pooled</th><th class="num">Open</th><th>Last answer</th></tr>
+    {% for r in table %}
+    <tr><td>{{ r.name }} <span class="muted">({{ r.username }})</span></td>
+        {% for c in r.cells %}<td class="num">{{ cell(c) }}</td>{% endfor %}
+        <td class="num"><b>{{ r.n }}</b></td>
+        <td class="num">{{ pct(r.mean) }}{% if r.mean is not none %} <span class="muted">({{ r.n_imp_ds }})</span>{% endif %}</td>
+        <td class="num">{{ pct(r.pooled) }}</td>
+        <td class="num">{{ r.pending }}</td><td class="muted">{{ r.last }}</td></tr>
+    {% endfor %}
+    <tr><td><b>All annotators</b></td>
+        {% for c in total.cells %}<td class="num"><b>{{ cell(c) }}</b></td>{% endfor %}
+        <td class="num"><b>{{ total.n }}</b></td>
+        <td class="num"><b>{{ pct(total.mean) }}</b>{% if total.mean is not none %} <span class="muted">({{ total.n_imp_ds }})</span>{% endif %}</td>
+        <td class="num"><b>{{ pct(total.pooled) }}</b></td><td></td><td></td></tr>
+  </table>
+  </div>
+
+  <h2>Questions available</h2>
+  <table style="max-width:640px">
+    <tr><th>Dataset</th><th class="num">In bank</th><th class="num">Not yet handed out</th></tr>
+    {% for d in datasets %}<tr><td>{{ d[1] }}</td><td class="num">{{ d[2] }}</td><td class="num">{{ d[3] }}</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

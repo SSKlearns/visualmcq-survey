@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <h1>No questions left in {{ dataset }}</h1>
+  <p>Every question of this dataset has been answered or is being answered by someone else. Thank you!</p>
+  <a class="btn" href="{{ url_for('choose') }}">Choose another dataset</a>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}VisualMCQ evaluation{% endblock %}</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --fg:#1d2330; --muted:#667085; --line:#d9dde4; --acc:#2563eb;
+          --acc-soft:#dbe7ff; --ok:#15803d; --bad:#b42318; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { display:flex; align-items:center; gap:16px; padding:10px 20px; background:var(--card); border-bottom:1px solid var(--line); }
+  header .brand { font-weight:600; }
+  header .sp { flex:1; }
+  header a { color:var(--muted); text-decoration:none; }
+  header a:hover { color:var(--fg); }
+  main { max-width:1400px; margin:0 auto; padding:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:18px 20px; }
+  h1 { font-size:20px; margin:0 0 12px; } h2 { font-size:16px; margin:22px 0 8px; }
+  .muted { color:var(--muted); }
+  button, .btn { display:inline-block; font:inherit; padding:8px 16px; border-radius:6px; border:1px solid var(--acc);
+                 background:var(--acc); color:#fff; cursor:pointer; text-decoration:none; }
+  button:disabled { opacity:.4; cursor:default; }
+  .btn.ghost { background:transparent; color:var(--acc); }
+  input[type=text], input[type=password] { font:inherit; padding:8px 10px; width:100%; border:1px solid var(--line); border-radius:6px; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); }
+  th { font-weight:600; color:var(--muted); font-size:13px; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .err { color:var(--bad); margin:8px 0; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header>
+  <span class="brand">VisualMCQ human evaluation</span>
+  <span class="sp"></span>
+  {% if user %}
+    {% if user.role == 'admin' %}<a href="{{ url_for('admin') }}">Dashboard</a>{% else %}<a href="{{ url_for('choose') }}">Datasets</a>{% endif %}
+    <span class="muted">{{ user.name }}</span>
+    <a href="{{ url_for('logout') }}">Log out</a>
+  {% endif %}
+</header>
+<main>{% block body %}{% endblock %}</main>
+</body>
+</html>

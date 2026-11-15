@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ ds_name }}{% endblock %}
+{% block head %}
+<style>
+  .top { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 20px; margin-bottom:14px; }
+  .top h1 { margin:0; }
+  .layout { display:grid; grid-template-columns:minmax(220px, 0.85fr) 3fr; gap:18px; align-items:start; }
+  @media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+  .query { position:sticky; top:12px; }
+  .label { font-size:13px; font-weight:600; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em; }
+  .frame { background:#000; border-radius:6px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .frame img { display:block; max-width:100%; object-fit:contain; }
+  .query .frame img { max-height:62vh; }
+  .grid { display:grid; grid-template-columns:repeat(var(--n), minmax(0, 1fr)); gap:10px; }
+  @media (max-width:900px) { .grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+  .opt { border:3px solid transparent; border-radius:9px; padding:6px; background:var(--card); cursor:pointer; user-select:none; }
+  .opt:hover { border-color:var(--line); }
+  .opt.sel { border-color:var(--acc); background:var(--acc-soft); }
+  .opt .frame { height:min(52vh, 420px); }
+  .opt .frame img { max-height:100%; }
+  .people .opt .frame img { height:100%; }
+  .people .query .frame img { height:min(62vh, 460px); }
+  .opt .num { font-weight:600; margin:2px 4px 6px; display:flex; justify-content:space-between; }
+  .zoom { font-size:12px; color:var(--acc); background:none; border:0; padding:0; cursor:zoom-in; }
+  .nota { display:flex; align-items:center; justify-content:center; height:min(52vh, 420px); font-size:17px; font-weight:600; color:var(--muted); text-align:center; }
+  .bar { display:flex; gap:12px; align-items:center; margin-top:16px; }
+  #lb { position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; align-items:center; justify-content:center; z-index:9; cursor:zoom-out; }
+  #lb img { max-width:96vw; max-height:94vh; }
+</style>
+{% endblock %}
+{% block body %}
+<div class="top">
+  <h1>{{ ds_name }}</h1>
+  <span class="muted">Question {{ n_here + 1 }} in this dataset &middot; {{ n_total }} answered in total</span>
+  <span style="flex:1"></span>
+  <a href="{{ url_for('choose') }}">Change dataset</a>
+</div>
+
+<form method="post" action="{{ url_for('answer') }}" id="f" class="{{ 'people' if q.domain != 'implants' else '' }}">
+  <input type="hidden" name="uid" value="{{ q.uid }}">
+  <input type="hidden" name="dataset" value="{{ dataset }}">
+  <input type="hidden" name="pick" id="pick" value="">
+  <div class="layout">
+    <div class="query card">
+      <div class="label">Query</div>
+      <div class="frame"><img src="{{ url_for('img', p=q.query_image) }}" alt="query"></div>
+      <div style="margin-top:6px"><button type="button" class="zoom" data-src="{{ url_for('img', p=q.query_image) }}">Enlarge</button></div>
+    </div>
+    <div class="card">
+      <div class="label">Which candidate shows the same {{ q.noun }} as the query?</div>
+      <div class="grid" style="--n:{{ q.options|length + (1 if q.nota_offered else 0) }}">
+        {% for o in q.options %}
+        <div class="opt" data-k="{{ loop.index }}">
+          <div class="num"><span>{{ loop.index }}</span>
+            <button type="button" class="zoom" data-src="{{ url_for('img', p=o.image) }}">Enlarge</button></div>
+          <div class="frame"><img src="{{ url_for('img', p=o.image) }}" alt="candidate {{ loop.index }}"></div>
+        </div>
+        {% endfor %}
+        {% if q.nota_offered %}
+        <div class="opt" data-k="{{ q.options|length + 1 }}">
+          <div class="num"><span>{{ q.options|length + 1 }}</span></div>
+          <div class="nota">None of the above</div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="bar">
+        <button type="submit" id="go" disabled>Submit and next</button>
+        <span class="muted">Click a candidate (or press its number), then submit (Enter). Enlarge opens the full image.</span>
+      </div>
+    </div>
+  </div>
+</form>
+<div id="lb"><img alt=""></div>
+
+<script>
+  const opts = [...document.querySelectorAll('.opt')], pick = document.getElementById('pick'),
+        go = document.getElementById('go'), lb = document.getElementById('lb'), f = document.getElementById('f');
+  let sent = false;
+  function select(k) {
+    opts.forEach(o => o.classList.toggle('sel', o.dataset.k === String(k)));
+    pick.value = k; go.disabled = false;
+  }
+  opts.forEach(o => o.addEventListener('click', e => { if (!e.target.classList.contains('zoom')) select(o.dataset.k); }));
+  document.querySelectorAll('.zoom').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation(); lb.querySelector('img').src = b.dataset.src; lb.style.display = 'flex';
+  }));
+  lb.addEventListener('click', () => lb.style.display = 'none');
+  f.addEventListener('submit', e => { if (!pick.value || sent) { e.preventDefault(); return; } sent = true; go.disabled = true; });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { lb.style.display = 'none'; return; }
+    if (lb.style.display === 'flex') return;
+    const k = parseInt(e.key, 10);
+    if (k >= 1 && k <= opts.length) select(k);
+    if (e.key === 'Enter' && pick.value) { e.preventDefault(); f.requestSubmit(); }
+  });
+</script>
+{% endblock %}

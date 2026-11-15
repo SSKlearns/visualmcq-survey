@@ -1,0 +1,7 @@
+{
+  "admin": {"password": "admin123", "role": "admin", "name": "Admin"},
+  "doc1": {"password": "doc1pass", "role": "annotator", "name": "Doctor 1", "specialty": "", "experience_years": ""},
+  "doc2": {"password": "doc2pass", "role": "annotator", "name": "Doctor 2", "specialty": "", "experience_years": ""},
+  "doc3": {"password": "doc3pass", "role": "annotator", "name": "Doctor 3", "specialty": "", "experience_years": ""},
+  "doc4": {"password": "doc4pass", "role": "annotator", "name": "Doctor 4", "specialty": "", "experience_years": ""}
+}

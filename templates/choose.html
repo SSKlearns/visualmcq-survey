@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Choose a dataset{% endblock %}
+{% block body %}
+<div class="card">
+  <h1>Choose a dataset</h1>
+  <p>Each question shows a <b>query image</b> and several <b>candidate images</b>. Pick the candidate that shows
+     the <b>same implant model</b> as the query (for the people dataset: the <b>same person</b>).
+     {% if nota %}If none of the candidates matches, choose <b>None of the above</b>.{% else %}Exactly one candidate is correct.{% endif %}
+     There is no time limit and no fixed number of questions: answer as many as you like, switch dataset or log out
+     at any time. Your answers are saved as you go.</p>
+  <p class="muted">You have answered {{ total }} question{{ '' if total == 1 else 's' }} so far.</p>
+  <table>
+    <tr><th>Dataset</th><th class="num">Candidates per question</th><th class="num">You answered</th><th class="num">Questions left</th><th></th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td class="num">{{ r.k }}</td>
+      <td class="num">{{ r.mine }}</td>
+      <td class="num">{{ r.left }}</td>
+      <td style="text-align:right"><a class="btn" href="{{ url_for('annotate', dataset=r.id) }}">{{ 'Continue' if r.mine else 'Start' }}</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
