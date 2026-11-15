@@ -12,13 +12,32 @@ The admin page shows progress and downloads every response as CSV.
 
 This (1) copies the hard-bank questions and the images they use from `../cvpr-27` into `data/` (first run only,
 ~220 MB), (2) builds the Docker image `vmcq-human-eval`, (3) (re)starts the container on **port 8015**.
-Open `http://<server>:8015`.
+Open `http://<server>:8015/visualmcq-survey/`.
 
 - Other repo location: `VMCQ_SRC=/path/to/cvpr-27 ./run.sh`
+- Other URL path: `VMCQ_PREFIX=/other-path ./run.sh`; `VMCQ_PREFIX= ./run.sh` serves it at `/`
 - Other port: `PORT=9000 ./run.sh` (the container always listens on 8015 inside)
 - If `docker` needs root on the machine, the script falls back to `sudo docker`.
 - Proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, ...) are passed to the build when set.
 - To deploy on another machine without the cvpr-27 repo, copy this folder **including `data/`** and run `./run.sh`.
+
+## Behind a reverse proxy (e.g. `aih.cse.iitd.ac.in/visualmcq-survey`)
+
+The app is served under `/visualmcq-survey` by default: every link, image and redirect carries that prefix, and
+the login cookie (`vmcq_survey_session`) is limited to that path, so it cannot clash with other apps on the
+domain. The proxy may pass the prefix through or strip it; both work. nginx:
+
+```nginx
+location /visualmcq-survey/ {
+    proxy_pass http://<docker-host>:8015;      # no trailing slash: prefix passed through
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 1m;
+}
+location = /visualmcq-survey { return 301 /visualmcq-survey/; }
+```
+
+The app has no links to the rest of the site.
 
 ## Accounts
 

@@ -17,8 +17,33 @@ DATA = os.environ.get("VMCQ_DATA", "data")
 STATE = os.environ.get("VMCQ_STATE", "state")
 USERS_FILE = os.environ.get("VMCQ_USERS", "config/users.json")
 
+PREFIX = "/" + os.environ.get("VMCQ_PREFIX", "").strip("/") if os.environ.get("VMCQ_PREFIX", "").strip("/") else ""
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("VMCQ_SECRET", "vmcq-human-eval")   # signs the session cookie only
+# own cookie name and path, so other apps on the same domain neither see nor overwrite it
+app.config.update(SESSION_COOKIE_NAME="vmcq_survey_session", SESSION_COOKIE_PATH=PREFIX or "/")
+
+
+class PrefixMiddleware:
+    """Serve the app under PREFIX (e.g. /visualmcq-survey) behind a reverse proxy.
+
+    All generated links carry the prefix. Requests work whether the proxy strips the prefix or passes it through.
+    """
+
+    def __init__(self, wsgi, prefix):
+        self.wsgi, self.prefix = wsgi, prefix
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        if path == self.prefix or path.startswith(self.prefix + "/"):
+            path = path[len(self.prefix):] or "/"
+        environ["PATH_INFO"], environ["SCRIPT_NAME"] = path, self.prefix
+        return self.wsgi(environ, start_response)
+
+
+if PREFIX:
+    app.wsgi_app = PrefixMiddleware(app.wsgi_app, PREFIX)
 
 # ------------------------------------------------------------------ data
 QUESTIONS = [json.loads(l) for l in open(os.path.join(DATA, "questions.jsonl"))]

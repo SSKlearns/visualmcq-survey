@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+# URL path the app is served under behind a reverse proxy (run.sh sets /visualmcq-survey); empty = /
+ENV VMCQ_PREFIX=""
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
